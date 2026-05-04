@@ -1,0 +1,98 @@
+name: Deploy Split Structure (Laravel & Public)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SERVER_IP: '72.61.142.238'
+      SERVER_USER: 'root'
+      TARGET_DIR_LARAVEL: '/home/pbmagency.id/laravel-sub1'
+      TARGET_DIR_PUBLIC: '/home/pbmagency.id/sub1'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Composer Dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NPM & Build Inertia React
+        run: |
+          npm install
+          npm run build
+
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Server to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      # ---------------------------------------------------------
+      # SYNC 1: Pindahkan Core Laravel
+      # ---------------------------------------------------------
+      - name: Sync Core Laravel to Server
+        run: |
+          rsync -avz --delete \
+          --exclude='.env' \
+          --exclude='/storage/' \
+          --exclude='/bootstrap/cache/' \
+          --exclude='/.git/' \
+          --exclude='/node_modules/' \
+          --exclude='/public/' \
+          ./ ${{ env.SERVER_USER }}@${{ env.SERVER_IP }}:${{ env.TARGET_DIR_LARAVEL }}
+
+      # ---------------------------------------------------------
+      # SYNC 2: Pindahkan Aset Public
+      # ---------------------------------------------------------
+      - name: Sync Public Assets to public_html
+        run: |
+          rsync -avz --delete \
+          --exclude='index.php' \
+          --exclude='.htaccess' \
+          ./public/ ${{ env.SERVER_USER }}@${{ env.SERVER_IP }}:${{ env.TARGET_DIR_PUBLIC }}
+
+      # ---------------------------------------------------------
+      # POST-DEPLOYMENT
+      # ---------------------------------------------------------
+      - name: Run Artisan & Move Manifest
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ${{ env.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ${{ env.TARGET_DIR_LARAVEL }}/public/build
+            cp ${{ env.TARGET_DIR_PUBLIC }}/build/manifest.json ${{ env.TARGET_DIR_LARAVEL }}/public/build/manifest.json
+
+            cd ${{ env.TARGET_DIR_PUBLIC }}
+            ln -sfn ../laravel/storage/app/public storage
+
+            cd ${{ env.TARGET_DIR_LARAVEL }}
+            php artisan optimize:clear
+            php artisan migrate --force
+
+            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}
+            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_PUBLIC }}
+            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}/storage
+            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}/bootstrap/cache

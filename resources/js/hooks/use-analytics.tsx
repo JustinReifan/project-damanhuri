@@ -1,0 +1,174 @@
+import { useCallback, useEffect } from 'react';
+
+const LANDING_SOURCE_KEY = 'landing_source';
+
+interface AnalyticsEvent {
+    event_type: 'visit' | 'scroll' | 'engagement' | 'conversion' | 'payment' | 'cta_click';
+    event_data?: Record<string, any>;
+    referral_source?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
+}
+
+/**
+ * Get landing source from sessionStorage
+ */
+export function getLandingSource(): string {
+    if (typeof window === 'undefined') return 'unknown';
+    return sessionStorage.getItem(LANDING_SOURCE_KEY) || window.location.pathname;
+}
+
+export function useAnalytics() {
+    const coursePrice = import.meta.env.VITE_COURSE_PRICE;
+
+    // Initialize landing source on mount
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        // Only set if not already present (preserve original entry point)
+        if (!sessionStorage.getItem(LANDING_SOURCE_KEY)) {
+            const cleanPath = window.location.pathname;
+            sessionStorage.setItem(LANDING_SOURCE_KEY, cleanPath);
+        }
+    }, []);
+
+    const track = useCallback(async (event: AnalyticsEvent) => {
+        try {
+            // Get landing source from session storage
+            const landingSource = getLandingSource();
+
+            // Get URL parameters for UTM tracking
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Inject landing_source into event_data
+            const enrichedEventData = {
+                ...event.event_data,
+                landing_source: landingSource,
+            };
+
+            const eventData = {
+                ...event,
+                event_data: enrichedEventData,
+                referral_source: event.referral_source || urlParams.get('ref') || document.referrer || 'direct',
+                utm_source: event.utm_source || urlParams.get('utm_source'),
+                utm_medium: event.utm_medium || urlParams.get('utm_medium'),
+                utm_campaign: event.utm_campaign || urlParams.get('utm_campaign'),
+                utm_content: event.utm_content || urlParams.get('utm_content'),
+                utm_term: event.utm_term || urlParams.get('utm_term'),
+            };
+
+            await fetch('/analytics/track', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify(eventData),
+            });
+        } catch (error) {
+            // Silent fail for analytics
+            console.debug('Analytics tracking failed:', error);
+        }
+    }, []);
+
+    const trackVisit = useCallback(() => {
+        track({
+            event_type: 'visit',
+            event_data: {
+                page: window.location.pathname,
+                timestamp: new Date().toISOString(),
+            },
+        });
+    }, [track]);
+
+    const trackScroll = useCallback(
+        (depth: number) => {
+            track({
+                event_type: 'scroll',
+                event_data: {
+                    depth,
+                    page: window.location.pathname,
+                    timestamp: new Date().toISOString(),
+                },
+            });
+        },
+        [track],
+    );
+
+    const trackEngagement = useCallback(
+        (type: string, data?: Record<string, any>) => {
+            track({
+                event_type: 'engagement',
+                event_data: {
+                    type,
+                    page: window.location.pathname,
+                    timestamp: new Date().toISOString(),
+                    ...data,
+                },
+            });
+        },
+        [track],
+    );
+
+    const trackConversion = useCallback(
+        (type: string, data?: Record<string, any>) => {
+            track({
+                event_type: 'conversion',
+                event_data: {
+                    type,
+                    page: window.location.pathname,
+                    timestamp: new Date().toISOString(),
+                    ...data,
+                },
+            });
+        },
+        [track],
+    );
+
+    const trackPayment = useCallback(
+        (status: string, data?: Record<string, any>) => {
+            track({
+                event_type: 'payment',
+                event_data: {
+                    status,
+                    amount: coursePrice,
+                    currency: 'IDR',
+                    timestamp: new Date().toISOString(),
+                    ...data,
+                },
+            });
+        },
+        [track],
+    );
+
+    const trackCTA = useCallback(
+        (location: string, text: string, destination?: string) => {
+            track({
+                event_type: 'cta_click',
+                event_data: {
+                    location,
+                    text,
+                    destination: destination || 'unknown',
+                    page: window.location.pathname,
+                    timestamp: new Date().toISOString(),
+                },
+            });
+        },
+        [track],
+    );
+
+    return {
+        track,
+        trackVisit,
+        trackScroll,
+        trackEngagement,
+        trackConversion,
+        trackPayment,
+        trackCTA,
+    };
+}
