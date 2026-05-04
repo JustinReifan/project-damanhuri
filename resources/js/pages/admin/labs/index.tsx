@@ -378,7 +378,7 @@ export default function LabsIndex({
                                 A/B Testing Labs
                             </h1>
                             <p className="text-sm text-muted-foreground">
-                                Optimize your landing page performance
+                                Optimize your landing page performances
                             </p>
                         </div>
                     </div>
@@ -959,7 +959,9 @@ export default function LabsIndex({
                                                         value,
                                                         name,
                                                     ) => [
-                                                        formatNumber(Number(value ?? 0)),
+                                                        formatNumber(
+                                                            Number(value ?? 0),
+                                                        ),
                                                         String(name ?? ''),
                                                     ]}
                                                 />
