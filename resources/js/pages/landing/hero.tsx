@@ -83,6 +83,7 @@ export default function Hero() {
                                         src="/storage/thumb/produk.png"
                                         alt="Panduan 23 Langkah Bangun Bisnis Lokal"
                                         className="h-full w-full object-cover"
+                                        loading="lazy"
                                     />
                                 </div>
 
@@ -97,9 +98,15 @@ export default function Hero() {
                                     <div className="flex items-center gap-2 rounded-lg border border-lp-yellow-200 bg-lp-yellow-50 px-3 py-2.5">
                                         <BookOpen className="h-4 w-4 text-lp-yellow-600" />
                                         <span className="text-xs font-medium text-lp-yellow-600">
-                                            70+ Halaman E-book
+                                            40+ Video Materi
                                         </span>
                                     </div>
+                                    {/* <div className="flex items-center gap-2 rounded-lg border border-lp-yellow-200 bg-lp-yellow-50 px-3 py-2.5">
+                                        <BookOpen className="h-4 w-4 text-lp-yellow-600" />
+                                        <span className="text-xs font-medium text-lp-yellow-600">
+                                            70+ Halaman Ebook
+                                        </span>
+                                    </div> */}
                                 </div>
                             </div>
 

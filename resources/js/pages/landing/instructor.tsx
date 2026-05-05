@@ -13,6 +13,7 @@ export default function Instructor() {
                                     src="/storage/mentor/mentor.jpeg"
                                     alt="Mohammad Rashid Damanhuri"
                                     className="h-full w-full object-cover"
+                                    loading="lazy"
                                 />
                             </div>
                         </div>

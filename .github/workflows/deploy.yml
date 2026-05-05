@@ -12,8 +12,8 @@ jobs:
     env:
       SERVER_IP: '72.61.142.238'
       SERVER_USER: 'root'
-      TARGET_DIR_LARAVEL: '/home/pbmagency.id/laravel-sub1'
-      TARGET_DIR_PUBLIC: '/home/pbmagency.id/sub1'
+      TARGET_DIR_LARAVEL: '/home/bangunbisnis.id/laravel-damanhuri'
+      TARGET_DIR_PUBLIC: '/home/bangunbisnis.id/sub-belajar'
 
     steps:
       - name: Checkout Code
@@ -92,7 +92,7 @@ jobs:
             php artisan optimize:clear
             php artisan migrate --force
 
-            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}
-            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_PUBLIC }}
-            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}/storage
-            chown -R pbmag2242:pbmag2242 ${{ env.TARGET_DIR_LARAVEL }}/bootstrap/cache
+            chown -R bangu7744:bangu7744 ${{ env.TARGET_DIR_LARAVEL }}
+            chown -R bangu7744:bangu7744 ${{ env.TARGET_DIR_PUBLIC }}
+            chown -R bangu7744:bangu7744 ${{ env.TARGET_DIR_LARAVEL }}/storage
+            chown -R bangu7744:bangu7744 ${{ env.TARGET_DIR_LARAVEL }}/bootstrap/cache

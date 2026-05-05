@@ -69,6 +69,7 @@ export default function ValueStack() {
                                         src={item.image}
                                         alt={item.title}
                                         className="h-full w-full object-cover"
+                                        loading="lazy"
                                     />
                                 </div>
                                 <div
