@@ -10,3 +10,8 @@ declare module '@inertiajs/core' {
         };
     }
 }
+
+interface Window {
+    fbq: (...args: unknown[]) => void;
+}
+

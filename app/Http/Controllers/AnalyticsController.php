@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UserAnalytic;
+use App\Services\MetaConversionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ class AnalyticsController extends Controller
         ]);
     }
 
-    public function track(Request $request)
+    public function track(Request $request, MetaConversionService $metaService)
     {
         // Debug request
         Log::info('Analytics Request:', $request->all());
@@ -53,6 +54,21 @@ class AnalyticsController extends Controller
             'user_id' => auth()->id(),
             'created_at' => now(),
         ]);
+
+        // Send server-side events to Meta Conversions API
+        $eventId = $request->input('event_data.event_id');
+        $eventType = $request->input('event_type');
+
+        if ($eventId) {
+            if ($eventType === 'visit') {
+                $metaService->sendPageView($request, $eventId);
+            }
+
+            $metaEvent = $request->input('event_data.meta_event');
+            if ($eventType === 'cta_click' && $metaEvent === 'AddToCart') {
+                $metaService->sendAddToCart($request, $eventId);
+            }
+        }
 
         return response()->json(['success' => true]);
     }

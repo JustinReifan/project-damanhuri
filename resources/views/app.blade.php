@@ -55,13 +55,31 @@
             s = b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t, s)
         }(window, document, 'script',
-            'https://facebook.net');
+            'https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '1401992591015898');
-        fbq('track', 'PageView');
+
+        // Generate event ID for CAPI deduplication and expose to React
+        window.__META_PAGE_VIEW_EVENT_ID = crypto.randomUUID ? crypto.randomUUID() :
+            Date.now() + '-' + Math.random().toString(36).substring(2, 11);
+        fbq('track', 'PageView', {}, { eventID: window.__META_PAGE_VIEW_EVENT_ID });
     </script>
-    <noscript><img height="1" width="1" style="display:none" src="https://facebook.com" /></noscript>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1401992591015898&ev=PageView&noscript=1" /></noscript>
     <!-- End Meta Pixel Code -->
 
+    {{-- clarity --}}
+    <script type="text/javascript">
+        (function(c, l, a, r, i, t, y) {
+            c[a] = c[a] || function() {
+                (c[a].q = c[a].q || []).push(arguments)
+            };
+            t = l.createElement(r);
+            t.async = 1;
+            t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0];
+            y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "wlmsz9efh8");
+    </script>
 
     @fonts
 

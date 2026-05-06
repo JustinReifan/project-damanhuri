@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 import CtaButton from './cta-button';
-import { useAnalytics } from '@/hooks/use-analytics';
+import { generateEventId, useAnalytics } from '@/hooks/use-analytics';
 
 const valueItems = [
     { icon: PlayCircle, label: '40+ Video Tutorial', value: 'Rp 500.000' },
@@ -121,14 +121,34 @@ export default function Pricing() {
                                 text="Ya, Saya Mau Panduannya!"
                                 href="https://damanhuri.com/pembayaran"
                                 onClick={() => {
+                                    const eventId = generateEventId();
+
                                     trackCTA(
                                         'pricing_section',
                                         'Ya, Saya Mau Panduannya!',
                                         'https://damanhuri.com/pembayaran',
+                                        'AddToCart',
+                                        eventId,
                                     );
                                     trackConversion('cta_lead', {
                                         source: 'pricing_section',
                                     });
+
+                                    // Meta Pixel: AddToCart event with eventID for CAPI deduplication
+                                    if (typeof window.fbq === 'function') {
+                                        window.fbq(
+                                            'track',
+                                            'AddToCart',
+                                            {
+                                                content_name:
+                                                    'Panduan 23 Langkah Bangun Bisnis Lokal',
+                                                content_type: 'product',
+                                                value: 97000,
+                                                currency: 'IDR',
+                                            },
+                                            { eventID: eventId },
+                                        );
+                                    }
                                 }}
                             />
                         </div>
