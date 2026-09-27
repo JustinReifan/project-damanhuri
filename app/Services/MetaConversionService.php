@@ -20,11 +20,15 @@ class MetaConversionService
 
     public function __construct()
     {
-        $this->pixelId = config('services.meta.pixel_id', '');
-        $this->accessToken = config('services.meta.access_token', '');
+        $this->pixelId = (string) config('services.meta.pixel_id', '');
+        $this->accessToken = (string) config('services.meta.access_token', '');
 
         if ($this->isConfigured()) {
-            Api::init(null, null, $this->accessToken, false);
+            try {
+                Api::init(null, null, $this->accessToken, false);
+            } catch (\Throwable $e) {
+                Log::warning('Meta CAPI SDK init failed', ['error' => $e->getMessage()]);
+            }
         }
     }
 
